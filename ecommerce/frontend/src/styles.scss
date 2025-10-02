@@ -1,0 +1,160 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Angular Material theme customization */
+@import '@angular/material/theming';
+
+// Custom theme colors
+$crunchypaws-primary: mat-palette($mat-orange, 500, 300, 700);
+$crunchypaws-accent: mat-palette($mat-light-blue, 500, 300, 700);
+$crunchypaws-warn: mat-palette($mat-red);
+
+// Create the theme
+$crunchypaws-theme: mat-light-theme((
+  color: (
+    primary: $crunchypaws-primary,
+    accent: $crunchypaws-accent,
+    warn: $crunchypaws-warn,
+  )
+));
+
+// Include theme styles for core and each component used in your app
+@include mat-core();
+@include mat-all-component-themes($crunchypaws-theme);
+
+/* Global styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+body {
+  background-color: #fafaf9;
+  color: #1c1917;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  outline: 2px solid #f2804b;
+  outline-offset: 2px;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(242, 128, 75, 0.3);
+  border-radius: 50%;
+  border-top-color: #f2804b;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply bg-secondary-500 hover:bg-secondary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-outline {
+  @apply border-2 border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden;
+}
+
+.card-hover {
+  @apply card hover:shadow-lg transition-shadow duration-200;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-new {
+  @apply badge bg-accent-100 text-accent-800;
+}
+
+.badge-offer {
+  @apply badge bg-red-100 text-red-800;
+}
+
+.badge-featured {
+  @apply badge bg-primary-100 text-primary-800;
+}
+
+/* Form styles */
+.form-field {
+  @apply w-full px-3 py-2 border border-neutral-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500;
+}
+
+.form-error {
+  @apply text-red-600 text-sm mt-1;
+}
+
+/* Utility classes */
+.text-gradient {
+  background: linear-gradient(135deg, #f2804b 0%, #e3653f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
