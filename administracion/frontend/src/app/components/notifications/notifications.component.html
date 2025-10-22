@@ -1,0 +1,33 @@
+<div class="notifications-dropdown">
+  <div class="notifications-header">
+    <h4>Notificaciones</h4>
+    <button class="close-btn" (click)="onClose()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  
+  <div class="notifications-list">
+    <div class="notification-item" 
+         *ngFor="let notification of notifications" 
+         [class.unread]="!notification.read"
+         (click)="onMarkAsRead(notification.id)">
+      <div class="notification-icon" [class]="'icon-' + notification.type">
+        <i class="fas" [class]="getIconClass(notification.type)"></i>
+      </div>
+      <div class="notification-content">
+        <h5 class="notification-title">{{ notification.title }}</h5>
+        <p class="notification-message">{{ notification.message }}</p>
+        <span class="notification-time">{{ getTimeAgo(notification.timestamp) }}</span>
+      </div>
+    </div>
+    
+    <div class="no-notifications" *ngIf="notifications.length === 0">
+      <i class="fas fa-bell-slash"></i>
+      <p>No hay notificaciones</p>
+    </div>
+  </div>
+  
+  <div class="notifications-footer">
+    <button class="btn btn-link">Ver todas</button>
+  </div>
+</div>

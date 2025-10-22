@@ -1,200 +1,173 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { ApiService } from './api.service';
-import { NotificationService } from './notification.service';
-import { CartItem, CartCalculation, Product } from '../models';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+import { 
+  Cart, 
+  CartItem, 
+  AddToCartRequest, 
+  UpdateCartItemRequest,
+  ApplyCouponRequest,
+  ApplyCouponResponse,
+  Coupon
+} from '../models/cart.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private apiService = inject(ApiService);
-  private notificationService = inject(NotificationService);
-
-  private readonly CART_KEY = 'crunchypaws_cart';
-
-  // Cart state
-  private cartItemsSubject = new BehaviorSubject<CartItem[]>([]);
-  public cartItems$ = this.cartItemsSubject.asObservable();
+  private http = inject(HttpClient);
+  private readonly API_URL = `${environment.apiUrl}/cart`;
   
-  // Signals for reactive state
-  public cartItems = signal<CartItem[]>([]);
-  public itemCount = computed(() => 
-    this.cartItems().reduce((sum, item) => sum + item.quantity, 0)
-  );
-  public isEmpty = computed(() => this.cartItems().length === 0);
-
+  private cartSubject = new BehaviorSubject<Cart>({
+    items: [],
+    subtotal: 0,
+    discount_total: 0,
+    shipping_price: 0,
+    total: 0,
+    item_count: 0
+  });
+  
+  public cart$ = this.cartSubject.asObservable();
+  
   constructor() {
-    this.loadCartFromStorage();
+    this.loadCart();
   }
-
-  // Load cart from localStorage
-  private loadCartFromStorage(): void {
-    const cartData = localStorage.getItem(this.CART_KEY);
-    if (cartData) {
-      try {
-        const items = JSON.parse(cartData);
-        this.cartItems.set(items);
-        this.cartItemsSubject.next(items);
-      } catch (error) {
-        console.error('Error loading cart from storage:', error);
-        this.clearCart();
-      }
-    }
+  
+  private loadCart(): void {
+    this.getCart().subscribe();
   }
-
-  // Save cart to localStorage
-  private saveCartToStorage(): void {
-    localStorage.setItem(this.CART_KEY, JSON.stringify(this.cartItems()));
+  
+  getCart(): Observable<Cart> {
+    return this.http.get<Cart>(this.API_URL)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart)),
+        catchError(error => {
+          console.error('Error loading cart:', error);
+          return of(this.cartSubject.value);
+        })
+      );
   }
-
-  // Add item to cart
-  addItem(product: Product, quantity: number = 1): void {
-    const currentItems = this.cartItems();
-    const existingItemIndex = currentItems.findIndex(item => item.productId === product.id);
-
-    if (existingItemIndex >= 0) {
-      // Update existing item
-      const updatedItems = [...currentItems];
-      updatedItems[existingItemIndex] = {
-        ...updatedItems[existingItemIndex],
-        quantity: updatedItems[existingItemIndex].quantity + quantity,
-        product
-      };
-      this.cartItems.set(updatedItems);
-    } else {
-      // Add new item
-      const newItem: CartItem = {
-        productId: product.id,
-        quantity,
-        product
-      };
-      this.cartItems.set([...currentItems, newItem]);
-    }
-
-    this.cartItemsSubject.next(this.cartItems());
-    this.saveCartToStorage();
-    this.notificationService.showSuccess(`${product.name} agregado al carrito`);
+  
+  addToCart(request: AddToCartRequest): Observable<Cart> {
+    return this.http.post<Cart>(this.API_URL, request)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart))
+      );
   }
-
-  // Update item quantity
-  updateQuantity(productId: number, quantity: number): void {
-    if (quantity <= 0) {
-      this.removeItem(productId);
-      return;
-    }
-
-    const currentItems = this.cartItems();
-    const updatedItems = currentItems.map(item =>
-      item.productId === productId ? { ...item, quantity } : item
-    );
-
-    this.cartItems.set(updatedItems);
-    this.cartItemsSubject.next(updatedItems);
-    this.saveCartToStorage();
+  
+  updateCartItem(itemId: string, request: UpdateCartItemRequest): Observable<Cart> {
+    return this.http.put<Cart>(`${this.API_URL}/items/${itemId}`, request)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart))
+      );
   }
-
-  // Remove item from cart
-  removeItem(productId: number): void {
-    const currentItems = this.cartItems();
-    const updatedItems = currentItems.filter(item => item.productId !== productId);
-    
-    this.cartItems.set(updatedItems);
-    this.cartItemsSubject.next(updatedItems);
-    this.saveCartToStorage();
-    this.notificationService.showInfo('Producto eliminado del carrito');
+  
+  removeFromCart(itemId: string): Observable<Cart> {
+    return this.http.delete<Cart>(`${this.API_URL}/items/${itemId}`)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart))
+      );
   }
-
-  // Clear entire cart
-  clearCart(): void {
-    this.cartItems.set([]);
-    this.cartItemsSubject.next([]);
-    localStorage.removeItem(this.CART_KEY);
+  
+  clearCart(): Observable<Cart> {
+    return this.http.delete<Cart>(this.API_URL)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart))
+      );
   }
-
-  // Get item quantity for a specific product
-  getItemQuantity(productId: number): number {
-    const item = this.cartItems().find(item => item.productId === productId);
-    return item ? item.quantity : 0;
-  }
-
-  // Check if product is in cart
-  isInCart(productId: number): boolean {
-    return this.cartItems().some(item => item.productId === productId);
-  }
-
-  // Calculate cart totals
-  calculateTotals(couponCode?: string): Observable<CartCalculation> {
-    const items = this.cartItems().map(item => ({
-      productId: item.productId,
-      quantity: item.quantity
-    }));
-
-    const payload: any = { items };
-    if (couponCode) {
-      payload.couponCode = couponCode;
-    }
-
-    return this.apiService.post<CartCalculation>('/cart/price', payload);
-  }
-
-  // Validate cart items (check stock, prices, etc.)
-  validateCart(): Observable<any> {
-    const items = this.cartItems().map(item => ({
-      productId: item.productId,
-      quantity: item.quantity
-    }));
-
-    return this.apiService.post('/cart/validate', { items }).pipe(
-      tap(response => {
-        if (response.success && response.data) {
-          // Update cart with validated data
-          const validatedItems = response.data.items;
-          const currentItems = this.cartItems();
-          
-          const updatedItems = currentItems.map(cartItem => {
-            const validatedItem = validatedItems.find(
-              (item: any) => item.productId === cartItem.productId
-            );
-            
-            if (validatedItem && !validatedItem.valid) {
-              // Handle invalid items (out of stock, etc.)
-              if (validatedItem.availableStock !== undefined) {
-                // Update quantity to available stock
-                return { ...cartItem, quantity: validatedItem.availableStock };
-              } else {
-                // Remove invalid item
-                return null;
-              }
-            }
-            
-            return cartItem;
-          }).filter(item => item !== null) as CartItem[];
-
-          if (updatedItems.length !== currentItems.length) {
-            this.cartItems.set(updatedItems);
-            this.cartItemsSubject.next(updatedItems);
-            this.saveCartToStorage();
-            this.notificationService.showWarning('Algunos productos fueron actualizados o eliminados del carrito');
+  
+  applyCoupon(request: ApplyCouponRequest): Observable<ApplyCouponResponse> {
+    return this.http.post<ApplyCouponResponse>(`${this.API_URL}/coupon`, request)
+      .pipe(
+        tap(response => {
+          if (response.success) {
+            this.getCart().subscribe();
           }
-        }
-      })
-    );
+        })
+      );
   }
-
-  // Get cart summary for display
-  getCartSummary() {
-    return computed(() => {
-      const items = this.cartItems();
-      const totalItems = this.itemCount();
-      const totalProducts = items.length;
-      
-      return {
-        items,
-        totalItems,
-        totalProducts,
-        isEmpty: this.isEmpty()
+  
+  removeCoupon(): Observable<Cart> {
+    return this.http.delete<Cart>(`${this.API_URL}/coupon`)
+      .pipe(
+        tap(cart => this.cartSubject.next(cart))
+      );
+  }
+  
+  getCartItemCount(): number {
+    return this.cartSubject.value.item_count;
+  }
+  
+  getCartTotal(): number {
+    return this.cartSubject.value.total;
+  }
+  
+  getCartSubtotal(): number {
+    return this.cartSubject.value.subtotal;
+  }
+  
+  getCartDiscount(): number {
+    return this.cartSubject.value.discount_total;
+  }
+  
+  getCartShipping(): number {
+    return this.cartSubject.value.shipping_price;
+  }
+  
+  isCartEmpty(): boolean {
+    return this.cartSubject.value.items.length === 0;
+  }
+  
+  getCartItems(): CartItem[] {
+    return this.cartSubject.value.items;
+  }
+  
+  // Local cart methods for offline support
+  addToLocalCart(product: any, quantity: number, variant?: any): void {
+    const items = [...this.cartSubject.value.items];
+    const existingItemIndex = items.findIndex(
+      item => item.product_id === product.id && item.variant_id === variant?.id
+    );
+    
+    if (existingItemIndex > -1) {
+      items[existingItemIndex].quantity += quantity;
+      items[existingItemIndex].total_price = items[existingItemIndex].quantity * items[existingItemIndex].unit_price;
+    } else {
+      const newItem: CartItem = {
+        id: `${product.id}_${variant?.id || 'default'}_${Date.now()}`,
+        product_id: product.id,
+        product: product,
+        quantity: quantity,
+        variant_id: variant?.id,
+        variant: variant,
+        unit_price: variant ? product.base_price + variant.extra_price : product.final_price,
+        total_price: quantity * (variant ? product.base_price + variant.extra_price : product.final_price),
+        added_at: new Date().toISOString()
       };
-    });
+      items.push(newItem);
+    }
+    
+    this.updateLocalCart(items);
+  }
+  
+  private updateLocalCart(items: CartItem[]): void {
+    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+    const item_count = items.reduce((sum, item) => sum + item.quantity, 0);
+    
+    const cart: Cart = {
+      items,
+      subtotal,
+      discount_total: 0,
+      shipping_price: 0,
+      total: subtotal,
+      item_count
+    };
+    
+    this.cartSubject.next(cart);
   }
 }
+
+
+

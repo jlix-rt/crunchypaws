@@ -1,56 +1,56 @@
-# Build stage
-FROM node:18-alpine AS builder
+# =============================================
+# DOCKERFILE - ECOMMERCE BACKEND
+# =============================================
+# Node.js 20 + Express + TypeScript + TypeORM
+# =============================================
 
+FROM node:20-alpine
+
+# Metadatos
+LABEL maintainer="CrunchyPaws <dev@crunchypaws.com>"
+LABEL description="Ecommerce Backend - Node.js + Express + TypeScript + TypeORM"
+LABEL version="1.0.0"
+
+# Instalar dependencias del sistema
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Crear usuario no-root
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copy package files
+# Copiar archivos de dependencias
 COPY package*.json ./
-COPY tsconfig.json ./
+COPY tsconfig*.json ./
 
-# Install dependencies
+# Instalar dependencias
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy source code
-COPY src/ ./src/
-COPY prisma/ ./prisma/
+# Copiar código fuente
+COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Cambiar propietario de archivos
+RUN chown -R nodejs:nodejs /app
 
-# Build the application
-RUN npm run build
+# Cambiar a usuario no-root
+USER nodejs
 
-# Production stage
-FROM node:18-alpine AS production
-
-WORKDIR /app
-
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S crunchypaws -u 1001
-
-# Copy built application
-COPY --from=builder --chown=crunchypaws:nodejs /app/dist ./dist
-COPY --from=builder --chown=crunchypaws:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=crunchypaws:nodejs /app/package*.json ./
-COPY --from=builder --chown=crunchypaws:nodejs /app/prisma ./prisma
-
-# Create uploads directory
-RUN mkdir -p uploads && chown crunchypaws:nodejs uploads
-
-# Switch to non-root user
-USER crunchypaws
-
-# Expose port
-EXPOSE 3000
+# Exponer puerto
+EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+    CMD curl -f http://localhost:3001/health || exit 1
 
-# Start the application
+# Comando por defecto
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "start:prod"]
+
+
+
+

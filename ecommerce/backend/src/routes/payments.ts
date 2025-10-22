@@ -1,16 +1,21 @@
 import { Router } from 'express';
-import { PaymentController } from '@/controllers/PaymentController';
+import { PaymentController } from '../controllers/PaymentController';
+import { authenticateToken, requireClient } from '../middleware/auth';
 
 const router = Router();
 const paymentController = new PaymentController();
 
-// Rutas públicas
+// GET /api/payments/methods
 router.get('/methods', paymentController.getPaymentMethods);
-router.post('/intent', paymentController.createPaymentIntent);
-router.post('/confirm', paymentController.confirmPayment);
-router.get('/status/:paymentIntentId', paymentController.getPaymentStatus);
 
-// Webhook para procesadores de pago
+// POST /api/payments/process
+router.post('/process', authenticateToken, requireClient, paymentController.processPayment);
+
+// POST /api/payments/webhook
 router.post('/webhook', paymentController.handleWebhook);
 
+// GET /api/payments/:id/status
+router.get('/:id/status', authenticateToken, requireClient, paymentController.getPaymentStatus);
+
 export default router;
+

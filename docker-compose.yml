@@ -1,0 +1,214 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: crunchypaws-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: crunchypaws
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./ecommerce/scripts/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./ecommerce/scripts/seeds.sql:/docker-entrypoint-initdb.d/02-seeds.sql
+    networks:
+      - crunchypaws-network
+
+  # Adminer para gestión de BD
+  adminer:
+    image: adminer:latest
+    container_name: crunchypaws-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - mysql
+
+  # ECOMMERCE BACKEND
+  ecommerce-backend:
+    build:
+      context: ./ecommerce/backend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-ecommerce-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: mysql://appuser:apppassword@mysql:3306/crunchypaws
+      JWT_SECRET: ecommerce-jwt-secret-key-2024
+      JWT_REFRESH_SECRET: ecommerce-refresh-secret-key-2024
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:4200,http://localhost:80
+      SOCIAL_WHATSAPP_BASE_URL: https://api.whatsapp.com/send?phone=50212345678
+      FACEBOOK_MESSENGER_DEEPLINK: https://m.me/crunchypaws
+      FEL_PROVIDER_URL: https://api.fel.gt/stub
+      FEL_PROVIDER_TOKEN: fel-stub-token
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./ecommerce/backend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - mysql
+    command: npm run dev
+
+  # ECOMMERCE FRONTEND
+  ecommerce-frontend:
+    build:
+      context: ./ecommerce/frontend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-ecommerce-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      API_URL: http://ecommerce-backend:3001
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./ecommerce/frontend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - ecommerce-backend
+    command: npm run start
+
+  # POS BACKEND
+  pos-backend:
+    build:
+      context: ./pos/backend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-pos-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: mysql://appuser:apppassword@mysql:3306/crunchypaws
+      JWT_SECRET: pos-jwt-secret-key-2024
+      JWT_REFRESH_SECRET: pos-refresh-secret-key-2024
+      JWT_EXPIRES_IN: 8h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:4201,http://localhost:80
+      SOCIAL_WHATSAPP_BASE_URL: https://api.whatsapp.com/send?phone=50212345678
+      FACEBOOK_MESSENGER_DEEPLINK: https://m.me/crunchypaws
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./pos/backend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - mysql
+    command: npm run dev
+
+  # POS FRONTEND
+  pos-frontend:
+    build:
+      context: ./pos/frontend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-pos-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      API_URL: http://pos-backend:3002
+    ports:
+      - "4201:4200"
+    volumes:
+      - ./pos/frontend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - pos-backend
+    command: npm run start
+
+  # ADMINISTRACIÓN BACKEND
+  administracion-backend:
+    build:
+      context: ./administracion/backend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-administracion-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DATABASE_URL: mysql://appuser:apppassword@mysql:3306/crunchypaws
+      JWT_SECRET: admin-jwt-secret-key-2024
+      JWT_REFRESH_SECRET: admin-refresh-secret-key-2024
+      JWT_EXPIRES_IN: 8h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:4202,http://localhost:80
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./administracion/backend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - mysql
+    command: npm run dev
+
+  # ADMINISTRACIÓN FRONTEND
+  administracion-frontend:
+    build:
+      context: ./administracion/frontend
+      dockerfile: Dockerfile
+    container_name: crunchypaws-administracion-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      API_URL: http://administracion-backend:3003
+    ports:
+      - "4202:4200"
+    volumes:
+      - ./administracion/frontend:/app
+      - /app/node_modules
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - administracion-backend
+    command: npm run start
+
+  # NGINX REVERSE PROXY
+  nginx:
+    image: nginx:alpine
+    container_name: crunchypaws-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - crunchypaws-network
+    depends_on:
+      - ecommerce-frontend
+      - pos-frontend
+      - administracion-frontend
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  crunchypaws-network:
+    driver: bridge
+
+
+
+

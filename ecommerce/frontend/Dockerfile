@@ -1,48 +1,79 @@
-# Build stage
-FROM node:18-alpine AS builder
+# =============================================
+# DOCKERFILE - ECOMMERCE FRONTEND
+# =============================================
+# Angular 20 + SSR + Tailwind CSS
+# =============================================
 
+# Etapa de construcción
+FROM node:20-alpine AS builder
+
+# Metadatos
+LABEL maintainer="CrunchyPaws <dev@crunchypaws.com>"
+LABEL description="Ecommerce Frontend - Angular 20 + SSR + Tailwind CSS"
+LABEL version="1.0.0"
+
+# Instalar dependencias del sistema
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/cache/apk/*
+
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copy package files
+# Copiar archivos de dependencias
 COPY package*.json ./
+COPY angular.json ./
+COPY tsconfig*.json ./
+COPY tailwind.config.js ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Instalar dependencias
+RUN npm ci && npm cache clean --force
 
-# Copy source code
+# Copiar código fuente
 COPY . .
 
-# Build the application
-RUN npm run build
+# Construir aplicación
+RUN npm run build:ssr
 
-# Production stage
-FROM nginx:alpine AS production
+# Etapa de producción
+FROM node:20-alpine AS runner
 
-# Copy built application
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Instalar dependencias del sistema
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    && rm -rf /var/cache/apk/*
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create non-root user
+# Crear usuario no-root
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S crunchypaws -u 1001
+    adduser -S nodejs -u 1001
 
-# Set permissions
-RUN chown -R crunchypaws:nodejs /usr/share/nginx/html && \
-    chown -R crunchypaws:nodejs /var/cache/nginx && \
-    chown -R crunchypaws:nodejs /var/log/nginx && \
-    chown -R crunchypaws:nodejs /etc/nginx/conf.d
+# Establecer directorio de trabajo
+WORKDIR /app
 
-# Switch to non-root user
-USER crunchypaws
+# Copiar archivos construidos desde la etapa anterior
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
-# Expose port
-EXPOSE 80
+# Instalar solo dependencias de producción
+RUN npm ci --only=production && npm cache clean --force
+
+# Cambiar a usuario no-root
+USER nodejs
+
+# Exponer puerto
+EXPOSE 4200
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+    CMD curl -f http://localhost:4200/health || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Comando por defecto
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "run", "serve:ssr"]
+
+
+
+

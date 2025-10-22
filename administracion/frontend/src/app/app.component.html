@@ -1,0 +1,17 @@
+<div class="app-container">
+  <!-- Sidebar -->
+  <app-sidebar *ngIf="!isLoginPage()"></app-sidebar>
+  
+  <!-- Main content area -->
+  <div class="main-content" [class.login-page]="isLoginPage()">
+    <!-- Header -->
+    <app-header *ngIf="!isLoginPage()"></app-header>
+    
+    <!-- Page content -->
+    <main class="page-content" [class.login-content]="isLoginPage()">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+

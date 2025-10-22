@@ -1,63 +1,64 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { JwtHelper } from '@/utils/jwt';
-import { ResponseHelper } from '@/utils/response';
-import { AuthenticatedRequest } from '@/types';
+import jwt from 'jsonwebtoken';
+import { config } from '../config/config';
+import { User, UserRole } from '../entities/User';
+import { AppDataSource } from '../config/database';
+import { CustomError } from './errorHandler';
 
-const prisma = new PrismaClient();
+export interface AuthRequest extends Request {
+  user?: User;
+}
 
 export const authenticateToken = async (
-  req: AuthenticatedRequest,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = JwtHelper.extractTokenFromHeader(req.headers.authorization);
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      ResponseHelper.unauthorized(res, 'Token de acceso requerido');
-      return;
+      throw new CustomError('Token de acceso requerido', 401);
     }
 
-    const payload = JwtHelper.verifyToken(token);
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+    const decoded = jwt.verify(token, config.jwt.secret) as any;
+    
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({
+      where: { id: decoded.userId, is_active: true },
     });
 
     if (!user) {
-      ResponseHelper.unauthorized(res, 'Usuario no encontrado');
-      return;
+      throw new CustomError('Usuario no encontrado o inactivo', 401);
     }
 
     req.user = user;
     next();
   } catch (error) {
-    ResponseHelper.unauthorized(res, 'Token inválido');
+    if (error instanceof jwt.JsonWebTokenError) {
+      next(new CustomError('Token inválido', 401));
+    } else {
+      next(error);
+    }
   }
 };
 
-export const optionalAuth = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const token = JwtHelper.extractTokenFromHeader(req.headers.authorization);
+export const requireRole = (roles: UserRole[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      return next(new CustomError('Autenticación requerida', 401));
+    }
 
-    if (token) {
-      const payload = JwtHelper.verifyToken(token);
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-      });
-
-      if (user) {
-        req.user = user;
-      }
+    if (!roles.includes(req.user.role)) {
+      return next(new CustomError('Permisos insuficientes', 403));
     }
 
     next();
-  } catch (error) {
-    // Ignore auth errors for optional auth
-    next();
-  }
+  };
 };
+
+export const requireAdmin = requireRole([UserRole.ADMIN]);
+export const requireEmployee = requireRole([UserRole.EMPLOYEE, UserRole.ADMIN]);
+export const requireClient = requireRole([UserRole.CLIENT, UserRole.EMPLOYEE, UserRole.ADMIN]);
+

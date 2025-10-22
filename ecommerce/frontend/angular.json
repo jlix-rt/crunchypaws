@@ -3,11 +3,18 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "crunchypaws-frontend": {
+    "crunchypaws-ecommerce": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "scss",
+          "standalone": true
+        },
+        "@schematics/angular:directive": {
+          "standalone": true
+        },
+        "@schematics/angular:pipe": {
+          "standalone": true
         }
       },
       "root": "",
@@ -17,38 +24,55 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist",
+            "outputPath": "dist/crunchypaws-ecommerce/browser",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/robots.txt",
+              "src/sitemap.xml"
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/pink-bluegrey.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/ngx-toastr/toastr.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ],
+            "allowedCommonJsDependencies": [
+              "bootstrap",
+              "socket.io-client"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
                 }
               ],
               "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
               "serviceWorker": true,
               "ngswConfigPath": "ngsw-config.json"
             },
@@ -67,11 +91,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "crunchypaws-frontend:build:production"
+              "buildTarget": "crunchypaws-ecommerce:build:production"
             },
             "development": {
-              "buildTarget": "crunchypaws-frontend:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "buildTarget": "crunchypaws-ecommerce:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -79,44 +102,91 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "crunchypaws-frontend:build"
+            "buildTarget": "crunchypaws-ecommerce:build"
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "src/test.ts",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
             "tsConfig": "tsconfig.spec.json",
-            "karmaConfig": "karma.conf.js",
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
               "src/assets"
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/pink-bluegrey.css",
               "src/styles.scss"
             ],
             "scripts": []
           }
         },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
+        "server": {
+          "builder": "@angular-devkit/build-angular:ssr-dev-server",
+          "configurations": {
+            "development": {
+              "buildTarget": "crunchypaws-ecommerce:build:development",
+              "serverTarget": "crunchypaws-ecommerce:server:development"
+            },
+            "production": {
+              "buildTarget": "crunchypaws-ecommerce:build:production",
+              "serverTarget": "crunchypaws-ecommerce:server:production"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "serve-ssr": {
+          "builder": "@angular-devkit/build-angular:ssr-dev-server",
+          "configurations": {
+            "development": {
+              "buildTarget": "crunchypaws-ecommerce:build:development",
+              "serverTarget": "crunchypaws-ecommerce:server:development"
+            },
+            "production": {
+              "buildTarget": "crunchypaws-ecommerce:build:production",
+              "serverTarget": "crunchypaws-ecommerce:server:production"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "prerender": {
+          "builder": "@angular-devkit/build-angular:prerender",
           "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
+            "routes": [
+              "/",
+              "/catalogo",
+              "/catalogo/perros",
+              "/catalogo/gatos",
+              "/catalogo/accesorios",
+              "/ofertas",
+              "/nosotros",
+              "/contacto",
+              "/ayuda"
             ]
-          }
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "crunchypaws-ecommerce:build:production",
+              "serverTarget": "crunchypaws-ecommerce:server:production"
+            }
+          },
+          "defaultConfiguration": "production"
         }
       }
     }
   },
   "cli": {
     "analytics": false,
-    "schematicCollections": [
-      "@angular-eslint/schematics"
-    ]
+    "cache": {
+      "enabled": true,
+      "path": ".angular/cache",
+      "environment": "all"
+    }
   }
 }
+
+
+

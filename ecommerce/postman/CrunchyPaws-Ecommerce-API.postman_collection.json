@@ -1,0 +1,780 @@
+{
+  "info": {
+    "name": "CrunchyPaws Ecommerce API",
+    "description": "Colección de endpoints para el sistema de ecommerce de CrunchyPaws",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@crunchypaws.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Juan Pérez\",\n  \"email\": \"juan.perez@email.com\",\n  \"password\": \"password123\",\n  \"phone\": \"50212345678\",\n  \"nit\": \"12345678-9\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/categories/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "categories", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/products?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/products/slug/alimento-premium-perros-adultos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "products", "slug", "alimento-premium-perros-adultos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/search?q=alimento&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "alimento"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Autocomplete",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/autocomplete?q=alimento",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "autocomplete"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "alimento"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/featured?limit=8",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "featured"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "8"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Related Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/related/1?limit=4",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "catalog", "related", "1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2,\n  \"variant_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "add"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/update/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "update", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove from Cart",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/remove/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "remove", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "clear"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"BIENVENIDA10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/apply-coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "apply-coupon"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/remove-coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "remove-coupon"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Cart Total",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/total",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "total"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2\n    }\n  ],\n  \"shipping_address\": {\n    \"label\": \"Casa\",\n    \"department\": \"Guatemala\",\n    \"municipality\": \"Guatemala\",\n    \"zone\": \"Zona 10\",\n    \"colonia\": \"Colonia Las Flores\",\n    \"street\": \"15 Avenida 8-45\",\n    \"reference\": \"Casa blanca con portón negro\"\n  },\n  \"payment_method_id\": 1,\n  \"coupon_code\": \"BIENVENIDA10\",\n  \"notes\": \"Entregar en horario de oficina\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Tracking",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1/tracking",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1", "tracking"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"rating\": 5,\n  \"title\": \"Excelente producto\",\n  \"body\": \"Mi perro ama este alimento. Se ve más saludable y con más energía.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1", "review"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "methods"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"method_id\": 1,\n  \"amount\": 100.00,\n  \"payment_data\": {\n    \"card_number\": \"4111111111111111\",\n    \"expiry_month\": \"12\",\n    \"expiry_year\": \"2025\",\n    \"cvv\": \"123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "process"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Payment Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_id\": \"TXN_001_2024\",\n  \"status\": \"PAID\",\n  \"amount\": 100.00,\n  \"order_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "webhook"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "1", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/product/1?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "product", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"rating\": 5,\n  \"title\": \"Excelente producto\",\n  \"body\": \"Mi perro ama este alimento. Se ve más saludable y con más energía.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"title\": \"Muy bueno\",\n  \"body\": \"Buen producto, precio justo. Lo recomiendo.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Loyalty",
+      "item": [
+        {
+          "name": "Get Account",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/loyalty/account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loyalty", "account"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/loyalty/transactions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loyalty", "transactions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tiers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/loyalty/tiers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loyalty", "tiers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Redeem Points",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"points\": 50,\n  \"reason\": \"Canje por descuento\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/loyalty/redeem",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loyalty", "redeem"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Shipping",
+      "item": [
+        {
+          "name": "Calculate Shipping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department\": \"Guatemala\",\n  \"municipality\": \"Guatemala\",\n  \"zone\": \"Zona 10\",\n  \"colonia\": \"Colonia Las Flores\",\n  \"weight\": 2.5,\n  \"value\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/shipping/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "shipping", "calculate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Shipping Rates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/shipping/rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "shipping", "rates"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
+
+

@@ -1,12 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
 
-import { HeaderComponent } from './components/layout/header/header.component';
-import { FooterComponent } from './components/layout/footer/footer.component';
-import { LoadingService } from './services/loading.service';
-import { SeoService } from './services/seo.service';
+import { HeaderComponent } from './components/header/header.component';
+import { FooterComponent } from './components/footer/footer.component';
+import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+import { ToastContainerComponent } from './components/toast-container/toast-container.component';
+import { CartSidebarComponent } from './components/cart-sidebar/cart-sidebar.component';
+import { SearchModalComponent } from './components/search-modal/search-modal.component';
+
+import { AppState } from './store/app.state';
+import { selectLoading } from './store/selectors/app.selector';
+import { loadInitialData } from './store/actions/app.actions';
 
 @Component({
   selector: 'app-root',
@@ -14,48 +21,50 @@ import { SeoService } from './services/seo.service';
   imports: [
     CommonModule,
     RouterOutlet,
-    MatProgressBarModule,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    LoadingSpinnerComponent,
+    ToastContainerComponent,
+    CartSidebarComponent,
+    SearchModalComponent
   ],
   template: `
     <div class="min-h-screen flex flex-col">
-      <!-- Loading bar -->
-      <mat-progress-bar 
-        *ngIf="loadingService.loading()" 
-        mode="indeterminate"
-        class="fixed top-0 left-0 right-0 z-50">
-      </mat-progress-bar>
-      
       <!-- Header -->
       <app-header></app-header>
       
-      <!-- Main content -->
+      <!-- Main Content -->
       <main class="flex-1">
         <router-outlet></router-outlet>
       </main>
       
       <!-- Footer -->
       <app-footer></app-footer>
+      
+      <!-- Global Components -->
+      <app-loading-spinner *ngIf="loading$ | async"></app-loading-spinner>
+      <app-toast-container></app-toast-container>
+      <app-cart-sidebar></app-cart-sidebar>
+      <app-search-modal></app-search-modal>
     </div>
   `,
   styles: [`
     :host {
       display: block;
-    }
-    
-    mat-progress-bar {
-      height: 3px;
+      min-height: 100vh;
     }
   `]
 })
 export class AppComponent implements OnInit {
-  loadingService = inject(LoadingService);
-  private seoService = inject(SeoService);
-
+  private store = inject(Store<AppState>);
+  
+  loading$: Observable<boolean> = this.store.select(selectLoading);
+  
   ngOnInit(): void {
-    // Configurar SEO básico
-    this.seoService.updateTitle('CrunchyPaws - Productos Deshidratados para Mascotas');
-    this.seoService.updateDescription('Los mejores productos deshidratados para perros y gatos. 100% naturales, sin conservantes. Snacks saludables que tu mascota adorará.');
+    // Load initial application data
+    this.store.dispatch(loadInitialData());
   }
 }
+
+
+

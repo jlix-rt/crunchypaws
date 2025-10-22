@@ -1,209 +1,138 @@
 import { Injectable, inject } from '@angular/core';
-import { Title, Meta } from '@angular/platform-browser';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Meta, Title } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SeoService {
-  private titleService = inject(Title);
-  private metaService = inject(Meta);
+  private meta = inject(Meta);
+  private title = inject(Title);
   private router = inject(Router);
-
-  constructor() {
-    // Listen to route changes to update SEO
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.updateSeoForRoute();
-      });
+  
+  private readonly defaultTitle = 'CrunchyPaws - Tienda de Mascotas en Guatemala';
+  private readonly defaultDescription = 'La mejor tienda de mascotas en Guatemala. Alimentos, accesorios, juguetes y más para perros y gatos. Envío a todo el país.';
+  private readonly defaultImage = 'https://crunchypaws.com/assets/images/og-image.jpg';
+  private readonly baseUrl = 'https://crunchypaws.com';
+  
+  setPageTitle(title: string): void {
+    const fullTitle = title ? `${title} | CrunchyPaws` : this.defaultTitle;
+    this.title.setTitle(fullTitle);
   }
-
-  // Update title
-  updateTitle(title: string): void {
-    this.titleService.setTitle(title);
+  
+  setPageDescription(description: string): void {
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
   }
-
-  // Update meta description
-  updateDescription(description: string): void {
-    this.metaService.updateTag({ name: 'description', content: description });
+  
+  setPageImage(image: string): void {
+    const fullImageUrl = image.startsWith('http') ? image : `${this.baseUrl}${image}`;
+    this.meta.updateTag({ property: 'og:image', content: fullImageUrl });
+    this.meta.updateTag({ name: 'twitter:image', content: fullImageUrl });
   }
-
-  // Update keywords
-  updateKeywords(keywords: string): void {
-    this.metaService.updateTag({ name: 'keywords', content: keywords });
+  
+  setPageUrl(url?: string): void {
+    const fullUrl = url ? `${this.baseUrl}${url}` : `${this.baseUrl}${this.router.url}`;
+    this.meta.updateTag({ property: 'og:url', content: fullUrl });
+    this.meta.updateTag({ name: 'twitter:url', content: fullUrl });
   }
-
-  // Update Open Graph tags
-  updateOpenGraph(data: {
-    title?: string;
-    description?: string;
-    image?: string;
-    url?: string;
-    type?: string;
-  }): void {
-    if (data.title) {
-      this.metaService.updateTag({ property: 'og:title', content: data.title });
-    }
-    if (data.description) {
-      this.metaService.updateTag({ property: 'og:description', content: data.description });
-    }
-    if (data.image) {
-      this.metaService.updateTag({ property: 'og:image', content: data.image });
-    }
-    if (data.url) {
-      this.metaService.updateTag({ property: 'og:url', content: data.url });
-    }
-    if (data.type) {
-      this.metaService.updateTag({ property: 'og:type', content: data.type });
-    }
+  
+  setPageKeywords(keywords: string[]): void {
+    this.meta.updateTag({ name: 'keywords', content: keywords.join(', ') });
   }
-
-  // Update Twitter Card tags
-  updateTwitterCard(data: {
-    title?: string;
-    description?: string;
-    image?: string;
-    card?: string;
-  }): void {
-    if (data.card) {
-      this.metaService.updateTag({ name: 'twitter:card', content: data.card });
-    }
-    if (data.title) {
-      this.metaService.updateTag({ name: 'twitter:title', content: data.title });
-    }
-    if (data.description) {
-      this.metaService.updateTag({ name: 'twitter:description', content: data.description });
-    }
-    if (data.image) {
-      this.metaService.updateTag({ name: 'twitter:image', content: data.image });
-    }
+  
+  setCanonicalUrl(url?: string): void {
+    const canonicalUrl = url ? `${this.baseUrl}${url}` : `${this.baseUrl}${this.router.url}`;
+    this.meta.updateTag({ rel: 'canonical', href: canonicalUrl });
   }
-
-  // Update canonical URL
-  updateCanonicalUrl(url: string): void {
-    // Remove existing canonical link
-    const existingCanonical = document.querySelector('link[rel="canonical"]');
-    if (existingCanonical) {
-      existingCanonical.remove();
-    }
-
-    // Add new canonical link
-    const link = document.createElement('link');
-    link.setAttribute('rel', 'canonical');
-    link.setAttribute('href', url);
-    document.head.appendChild(link);
-  }
-
-  // Update structured data (JSON-LD)
-  updateStructuredData(data: any): void {
+  
+  setStructuredData(data: any): void {
     // Remove existing structured data
     const existingScript = document.querySelector('script[type="application/ld+json"]');
     if (existingScript) {
       existingScript.remove();
     }
-
+    
     // Add new structured data
     const script = document.createElement('script');
     script.type = 'application/ld+json';
     script.text = JSON.stringify(data);
     document.head.appendChild(script);
   }
-
-  // Update all SEO tags at once
-  updateSeo(data: {
-    title: string;
-    description: string;
-    keywords?: string;
-    image?: string;
-    url?: string;
-    type?: string;
-    structuredData?: any;
-  }): void {
-    this.updateTitle(data.title);
-    this.updateDescription(data.description);
-    
-    if (data.keywords) {
-      this.updateKeywords(data.keywords);
-    }
-
-    this.updateOpenGraph({
-      title: data.title,
-      description: data.description,
-      image: data.image,
-      url: data.url,
-      type: data.type || 'website'
-    });
-
-    this.updateTwitterCard({
-      title: data.title,
-      description: data.description,
-      image: data.image,
-      card: 'summary_large_image'
-    });
-
-    if (data.url) {
-      this.updateCanonicalUrl(data.url);
-    }
-
-    if (data.structuredData) {
-      this.updateStructuredData(data.structuredData);
-    }
-  }
-
-  // Update SEO based on current route
-  private updateSeoForRoute(): void {
-    const currentUrl = this.router.url;
-    const baseUrl = window.location.origin;
-    
-    // Default SEO for routes without specific data
-    const defaultSeo = {
-      title: 'CrunchyPaws - Productos Deshidratados para Mascotas',
-      description: 'Los mejores productos deshidratados para perros y gatos. 100% naturales, sin conservantes.',
-      url: baseUrl + currentUrl
-    };
-
-    // Route-specific SEO updates can be handled by individual components
-    this.updateCanonicalUrl(defaultSeo.url);
-  }
-
-  // Generate product structured data
-  generateProductStructuredData(product: any): any {
-    return {
+  
+  setProductStructuredData(product: any): void {
+    const structuredData = {
       '@context': 'https://schema.org',
       '@type': 'Product',
-      'name': product.name,
-      'description': product.description,
-      'image': product.imageUrl ? [product.imageUrl] : [],
-      'brand': {
+      name: product.name,
+      description: product.description,
+      image: product.images?.map((img: any) => img.url) || [],
+      brand: {
         '@type': 'Brand',
-        'name': 'CrunchyPaws'
+        name: 'CrunchyPaws'
       },
-      'offers': {
+      offers: {
         '@type': 'Offer',
-        'price': product.price,
-        'priceCurrency': 'GTQ',
-        'availability': product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        'seller': {
+        price: product.final_price,
+        priceCurrency: 'GTQ',
+        availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        seller: {
           '@type': 'Organization',
-          'name': 'CrunchyPaws'
+          name: 'CrunchyPaws'
         }
-      }
+      },
+      aggregateRating: product.reviews?.length > 0 ? {
+        '@type': 'AggregateRating',
+        ratingValue: this.calculateAverageRating(product.reviews),
+        reviewCount: product.reviews.length
+      } : undefined
     };
+    
+    this.setStructuredData(structuredData);
   }
-
-  // Generate breadcrumb structured data
-  generateBreadcrumbStructuredData(breadcrumbs: Array<{name: string, url: string}>): any {
-    return {
+  
+  setCategoryStructuredData(category: any): void {
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: category.name,
+      description: `Productos de ${category.name} para mascotas`,
+      url: `${this.baseUrl}/catalogo/${category.slug}`
+    };
+    
+    this.setStructuredData(structuredData);
+  }
+  
+  setBreadcrumbStructuredData(breadcrumbs: any[]): void {
+    const structuredData = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      'itemListElement': breadcrumbs.map((crumb, index) => ({
+      itemListElement: breadcrumbs.map((crumb, index) => ({
         '@type': 'ListItem',
-        'position': index + 1,
-        'name': crumb.name,
-        'item': crumb.url
+        position: index + 1,
+        name: crumb.name,
+        item: `${this.baseUrl}${crumb.url}`
       }))
     };
+    
+    this.setStructuredData(structuredData);
+  }
+  
+  private calculateAverageRating(reviews: any[]): number {
+    if (!reviews || reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return Math.round((sum / reviews.length) * 10) / 10;
+  }
+  
+  resetToDefaults(): void {
+    this.setPageTitle('');
+    this.setPageDescription(this.defaultDescription);
+    this.setPageImage(this.defaultImage);
+    this.setPageUrl();
+    this.setPageKeywords(['mascotas', 'perros', 'gatos', 'alimentos', 'accesorios', 'juguetes', 'Guatemala']);
   }
 }
+
+
+

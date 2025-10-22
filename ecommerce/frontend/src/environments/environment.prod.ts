@@ -1,26 +1,62 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '/api',
-  assetsBaseUrl: '/assets',
-  featureFlags: {
-    infiniteScroll: true,
-    showBadges: true,
-    enableCoupons: true,
-    enableWhatsApp: true,
-    enableGuestCheckout: true,
+  apiUrl: 'https://api.crunchypaws.com/api',
+  wsUrl: 'wss://api.crunchypaws.com',
+  appName: 'CrunchyPaws',
+  appVersion: '1.0.0',
+  defaultLanguage: 'es-GT',
+  supportedLanguages: ['es-GT', 'en-US'],
+  currency: 'GTQ',
+  currencySymbol: 'Q',
+  country: 'GT',
+  timezone: 'America/Guatemala',
+  features: {
+    wishlist: true,
+    reviews: true,
+    loyalty: true,
+    referrals: true,
+    socialLogin: true,
+    pushNotifications: true,
+    offlineMode: true
   },
-  seo: {
-    siteName: 'CrunchyPaws',
-    defaultTitle: 'CrunchyPaws - Productos Deshidratados para Mascotas',
-    defaultDescription: 'Los mejores productos deshidratados para perros y gatos. 100% naturales, sin conservantes.',
-    defaultImage: 'https://crunchypaws.com/assets/images/og-image.jpg',
-    twitterHandle: '@crunchypaws',
+  social: {
+    facebook: 'https://www.facebook.com/crunchypaws',
+    instagram: 'https://www.instagram.com/crunchypaws',
+    whatsapp: 'https://wa.me/50212345678',
+    twitter: 'https://twitter.com/crunchypaws'
   },
-  analytics: {
-    googleAnalyticsId: 'G-XXXXXXXXXX', // Replace with actual ID
-    facebookPixelId: 'XXXXXXXXXX', // Replace with actual ID
+  contact: {
+    phone: '+502-1234-5678',
+    email: 'info@crunchypaws.com',
+    address: 'Guatemala, Guatemala'
   },
   payment: {
-    stripePublishableKey: 'pk_live_XXXXXXXXXX', // Replace with actual key
+    stripe: {
+      publishableKey: 'pk_live_...',
+      enabled: true
+    },
+    paypal: {
+      clientId: '...',
+      enabled: true
+    }
   },
+  analytics: {
+    googleAnalytics: {
+      trackingId: 'GA_TRACKING_ID',
+      enabled: true
+    },
+    facebookPixel: {
+      pixelId: 'FB_PIXEL_ID',
+      enabled: true
+    }
+  },
+  seo: {
+    baseUrl: 'https://crunchypaws.com',
+    defaultTitle: 'CrunchyPaws - Tienda de Mascotas en Guatemala',
+    defaultDescription: 'La mejor tienda de mascotas en Guatemala. Alimentos, accesorios, juguetes y más para perros y gatos.',
+    defaultImage: 'https://crunchypaws.com/assets/images/og-image.jpg'
+  }
 };
+
+
+

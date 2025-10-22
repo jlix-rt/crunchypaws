@@ -1,0 +1,45 @@
+<header class="header">
+  <div class="header-left">
+    <button class="menu-toggle" (click)="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h1 class="page-title">{{ pageTitle }}</h1>
+  </div>
+  
+  <div class="header-right">
+    <div class="user-info" (click)="toggleUserMenu()">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-details">
+        <span class="user-name">{{ (currentUser?.firstName + ' ' + currentUser?.lastName) || 'Usuario' }}</span>
+        <span class="user-role">{{ getRoleText(currentUser?.role) }}</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="notifications-container">
+        <button class="action-btn" title="Notificaciones" (click)="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+        </button>
+        
+        <div class="notifications-dropdown" *ngIf="showNotifications">
+          <app-notifications 
+            [notifications]="notifications"
+            (markAsRead)="markAsRead($event)"
+            (close)="showNotifications = false">
+          </app-notifications>
+        </div>
+      </div>
+      
+      <button class="action-btn" title="Configuración" (click)="openSettings()">
+        <i class="fas fa-cog"></i>
+      </button>
+      
+      <button class="action-btn" title="Ayuda" (click)="openHelp()">
+        <i class="fas fa-question-circle"></i>
+      </button>
+    </div>
+  </div>
+</header>

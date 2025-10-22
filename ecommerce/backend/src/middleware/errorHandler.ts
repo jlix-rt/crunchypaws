@@ -1,10 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '@/utils/logger';
-import { ResponseHelper } from '@/utils/response';
 
 export interface AppError extends Error {
   statusCode?: number;
   isOperational?: boolean;
+}
+
+export class CustomError extends Error implements AppError {
+  public statusCode: number;
+  public isOperational: boolean;
+
+  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
 }
 
 export const errorHandler = (
@@ -13,36 +24,29 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Error interno del servidor';
+  const { statusCode = 500, message } = error;
 
   // Log del error
-  logger.error('Error en la aplicación', {
-    error: error.message,
+  console.error('Error:', {
+    message: error.message,
     stack: error.stack,
     url: req.url,
     method: req.method,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
+    timestamp: new Date().toISOString(),
   });
 
-  // En desarrollo, incluir stack trace
-  if (process.env.NODE_ENV === 'development') {
-    ResponseHelper.error(res, message, statusCode);
-    return;
-  }
-
-  // En producción, no exponer detalles internos
-  if (statusCode >= 500) {
-    ResponseHelper.serverError(res);
-    return;
-  }
-
-  ResponseHelper.error(res, message, statusCode);
-};
-
-export const notFoundHandler = (req: Request, res: Response): void => {
-  ResponseHelper.notFound(res, `Ruta ${req.originalUrl} no encontrada`);
+  // Respuesta del error
+  res.status(statusCode).json({
+    error: {
+      message: statusCode === 500 ? 'Error interno del servidor' : message,
+      statusCode,
+      timestamp: new Date().toISOString(),
+      path: req.url,
+      method: req.method,
+    },
+  });
 };
 
 export const asyncHandler = (fn: Function) => {
@@ -50,3 +54,4 @@ export const asyncHandler = (fn: Function) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
+

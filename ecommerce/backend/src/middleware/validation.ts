@@ -1,81 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
-import { ResponseHelper } from '@/utils/response';
+import { z } from 'zod';
+import { CustomError } from './errorHandler';
 
-export const validateBody = (schema: ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export const validateRequest = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.body = schema.parse(req.body);
+      schema.parse(req.body);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        const errors: Record<string, string[]> = {};
+      if (error instanceof z.ZodError) {
+        const errorMessages = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+        }));
         
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          if (!errors[path]) {
-            errors[path] = [];
-          }
-          errors[path].push(err.message);
-        });
-
-        ResponseHelper.validationError(res, errors);
-        return;
+        return next(new CustomError('Datos de entrada inválidos', 400));
       }
-      
-      ResponseHelper.serverError(res, 'Error de validación');
+      next(error);
     }
   };
 };
 
-export const validateQuery = (schema: ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export const validateQuery = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.query = schema.parse(req.query);
+      schema.parse(req.query);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        const errors: Record<string, string[]> = {};
-        
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          if (!errors[path]) {
-            errors[path] = [];
-          }
-          errors[path].push(err.message);
-        });
-
-        ResponseHelper.validationError(res, errors);
-        return;
+      if (error instanceof z.ZodError) {
+        return next(new CustomError('Parámetros de consulta inválidos', 400));
       }
-      
-      ResponseHelper.serverError(res, 'Error de validación de parámetros');
+      next(error);
     }
   };
 };
 
-export const validateParams = (schema: ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export const validateParams = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.params = schema.parse(req.params);
+      schema.parse(req.params);
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        const errors: Record<string, string[]> = {};
-        
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          if (!errors[path]) {
-            errors[path] = [];
-          }
-          errors[path].push(err.message);
-        });
-
-        ResponseHelper.validationError(res, errors);
-        return;
+      if (error instanceof z.ZodError) {
+        return next(new CustomError('Parámetros de ruta inválidos', 400));
       }
-      
-      ResponseHelper.serverError(res, 'Error de validación de parámetros');
+      next(error);
     }
   };
 };
+
+

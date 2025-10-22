@@ -1,0 +1,330 @@
+<div class="products-container">
+  <div class="page-header">
+    <h1 class="page-title">Gestión de Productos</h1>
+    <p class="page-subtitle">Administra el catálogo de productos</p>
+  </div>
+
+  <div class="controls-bar">
+    <div class="search-section">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" placeholder="Buscar producto...">
+      </div>
+      <select [(ngModel)]="selectedCategory" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="">Todas las Categorías</option>
+        <option value="Alimentos">Alimentos</option>
+        <option value="Juguetes">Juguetes</option>
+        <option value="Accesorios">Accesorios</option>
+        <option value="Cuidado">Cuidado</option>
+      </select>
+      <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()" class="filter-select">
+        <option value="">Todos los Estados</option>
+        <option value="active">Activo</option>
+        <option value="inactive">Inactivo</option>
+      </select>
+    </div>
+    
+    <div class="action-buttons">
+      <button class="btn btn-secondary" (click)="clearFilters()">
+        <i class="fas fa-times"></i>
+        Limpiar Filtros
+      </button>
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <i class="fas fa-plus"></i>
+        Nuevo Producto
+      </button>
+      <button class="btn btn-danger" [disabled]="!hasSelectedProducts()" (click)="deleteSelectedProducts()">
+        <i class="fas fa-trash"></i>
+        Eliminar Seleccionados
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="checkbox-column">
+            <input type="checkbox" [(ngModel)]="selectAll" (change)="toggleSelectAll()">
+          </th>
+          <th>ID</th>
+          <th>SKU</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>Estado</th>
+          <th>Última Actualización</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of filteredProducts">
+          <td class="checkbox-column">
+            <input type="checkbox" [(ngModel)]="product.selected" (change)="onProductSelect()">
+          </td>
+          <td>{{ product.id }}</td>
+          <td class="sku-cell">{{ product.sku }}</td>
+          <td class="name-cell">{{ product.name }}</td>
+          <td>{{ product.category }}</td>
+          <td class="price-cell">Q{{ product.price | number:'1.2-2' }}</td>
+          <td class="stock-cell">{{ product.stock }}</td>
+          <td>
+            <span [class]="getStatusClass(product.status)">
+              {{ product.status === 'active' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="date-cell">{{ product.lastUpdated }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon btn-edit" (click)="editProduct(product)" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-icon btn-delete" (click)="deleteProduct(product.id)" title="Eliminar">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredProducts.length === 0">
+          <td colspan="10" class="no-data">
+            <i class="fas fa-tag"></i>
+            <p>No se encontraron productos</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="btn btn-secondary" [disabled]="currentPage === 1" (click)="prevPage()">
+      <i class="fas fa-chevron-left"></i>
+      Anterior
+    </button>
+    <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
+    <button class="btn btn-secondary" [disabled]="currentPage === totalPages" (click)="nextPage()">
+      Siguiente
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Modal para agregar/editar producto -->
+<app-modal 
+  [isOpen]="showModal" 
+  [title]="modalTitle"
+  [confirmText]="isEditing ? 'Actualizar' : 'Crear'"
+  [disableConfirm]="productForm.invalid"
+  [closeOnOverlayClick]="false"
+  (onClose)="closeModal()"
+  (onConfirm)="saveProduct()">
+  
+  <form [formGroup]="productForm" class="product-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Nombre del Producto *</label>
+        <input type="text" id="name" formControlName="name" class="form-control"
+               [class.is-invalid]="productForm.get('name')?.invalid && productForm.get('name')?.touched">
+        <div *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched" class="invalid-feedback">
+          <div *ngIf="productForm.get('name')?.errors?.['required']">El nombre es requerido</div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="sku">SKU *</label>
+        <input type="text" id="sku" formControlName="sku" class="form-control"
+               [class.is-invalid]="productForm.get('sku')?.invalid && productForm.get('sku')?.touched">
+        <div *ngIf="productForm.get('sku')?.invalid && productForm.get('sku')?.touched" class="invalid-feedback">
+          <div *ngIf="productForm.get('sku')?.errors?.['required']">El SKU es requerido</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Categorías *</label>
+        <div class="categories-checkbox-container">
+          <div *ngFor="let category of availableCategories" class="category-checkbox-item">
+            <input 
+              type="checkbox" 
+              [id]="'category-' + category.id"
+              [value]="category.id"
+              (change)="onCategoryChange(category.id, $event)"
+              [checked]="isCategorySelected(category.id)"
+              class="category-checkbox">
+            <label [for]="'category-' + category.id" class="category-label">
+              {{ category.name }}
+            </label>
+          </div>
+        </div>
+        <small class="form-text text-muted">Selecciona una o más categorías para el producto</small>
+      </div>
+    </div>
+
+    <!-- Tipos de Costos Adicionales -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipos de Costos Adicionales</label>
+        <div class="cost-types-container">
+        <!-- Solo mostrar costos opcionales (sin checkbox para obligatorios) -->
+          <div *ngFor="let costType of availableCostTypes">
+          <div *ngIf="!costType.isMandatory" class="cost-type-item">
+            <div class="cost-type-optional">
+              <div class="cost-type-checkbox">
+                <input 
+                  type="checkbox" 
+                  [id]="'costType-' + costType.id"
+                  [checked]="isCostTypeSelected(costType.id)"
+                  (change)="onCostTypeChange(costType, $any($event.target).checked)"
+                  class="cost-type-checkbox-input">
+                  <label [for]="'costType-' + costType.id" class="cost-type-label">
+                    {{ costType.name }} ({{ costType.percentage }}%) - Prioridad {{ costType.priority }}
+                    <small class="cost-type-description">{{ costType.description }}</small>
+                  </label>
+              </div>
+            </div>
+          </div>
+          </div>              
+          <!-- Mostrar mensaje si no hay costos opcionales -->
+          <div *ngIf="getOptionalCostTypes().length === 0" class="no-optional-costs">
+            <p class="text-muted">No hay tipos de costos opcionales disponibles</p>
+          </div>
+        </div>
+        <small class="form-text text-muted">Selecciona los tipos de costos adicionales que se aplicarán al producto</small>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="status">Estado *</label>
+        <select id="status" formControlName="status" class="form-control">
+          <option value="active">Activo</option>
+          <option value="inactive">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="isAlsoSupply" class="form-checkbox">
+            <span class="checkmark"></span>
+            Es también insumo
+          </label>
+          <small class="form-text text-muted">Marcar si este producto puede ser usado como insumo para otros productos</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="price">Precio Calculado (Q)</label>
+        <input type="text" id="price" [value]="calculatedPrice | number:'1.2-2'" readonly class="form-control price-display" placeholder="0.00">
+        <small class="form-text text-muted">El precio se calcula automáticamente basado en los insumos y porcentaje de ganancia</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="stock">Stock *</label>
+        <input type="number" id="stock" formControlName="stock" class="form-control" min="0"
+               [class.is-invalid]="productForm.get('stock')?.invalid && productForm.get('stock')?.touched">
+        <div *ngIf="productForm.get('stock')?.invalid && productForm.get('stock')?.touched" class="invalid-feedback">
+          <div *ngIf="productForm.get('stock')?.errors?.['required']">El stock es requerido</div>
+          <div *ngIf="productForm.get('stock')?.errors?.['min']">El stock debe ser mayor o igual a 0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Descripción</label>
+      <textarea id="description" formControlName="description" class="form-control" rows="3"
+                placeholder="Descripción del producto..."></textarea>
+    </div>
+
+    <!-- Sección de Insumos -->
+    <div class="supplies-section">
+      <div class="section-header">
+        <h4>Insumos Requeridos</h4>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSupply()">
+          <i class="fas fa-plus"></i>
+          Agregar Insumo
+        </button>
+      </div>
+
+      <div formArrayName="supplies" class="supplies-list">
+        <div *ngFor="let supply of suppliesArray.controls; let i = index" 
+             [formGroupName]="i" class="supply-item">
+          <div class="supply-row">
+            <select formControlName="supplyId" class="form-control supply-select" 
+                    (change)="onSupplyChange(i)">
+              <option value="">Seleccionar insumo</option>
+              <option *ngFor="let supply of availableSupplies" [value]="supply.id">
+                {{ supply.name }} (Q{{ supply.unitPrice | number:'1.2-2' }}/{{ supply.unit }})
+              </option>
+            </select>
+            
+            <input type="number" formControlName="quantity" class="form-control quantity-input" 
+                   placeholder="Cantidad" min="0" step="0.01" (blur)="calculatePrice()">
+            
+            <span class="unit-display">{{ getSupplyUnit(supply.get('supplyId')?.value) }}</span>
+            
+            <span class="cost-display">
+              Q{{ getSupplyCostDisplay(supply.get('supplyId')?.value, supply.get('quantity')?.value) | number:'1.2-2' }}
+            </span>
+            
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeSupply(i)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cálculo de Precios -->
+      <div class="price-calculation" *ngIf="suppliesArray.length > 0">
+        <div class="calculation-header">
+          <h5>Cálculo de Precios</h5>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="calculatePrice()">
+            <i class="fas fa-calculator"></i>
+            Recalcular
+          </button>
+        </div>
+
+        <div class="profit-input">
+          <label for="profitPercentage">Porcentaje de Ganancia (%)</label>
+          <input id="profitPercentage" type="number" [ngModel]="profitPercentage" 
+                 [ngModelOptions]="{standalone: true}"
+                 (ngModelChange)="onProfitPercentageChange($event)"
+                 class="form-control" placeholder="30" min="0" max="100" step="0.1"
+                 (blur)="calculatePrice()">
+        </div>
+
+        <div class="price-breakdown">
+          <div class="breakdown-item">
+            <span class="label">Costo Total de Insumos:</span>
+            <span class="value">Q{{ priceBreakdown.totalCost | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="breakdown-item">
+            <span class="label">Ganancia ({{ profitPercentage }}%):</span>
+            <span class="value">Q{{ priceBreakdown.profitAmount | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="breakdown-item subtotal">
+            <span class="label">Subtotal:</span>
+            <span class="value">Q{{ priceBreakdown.subtotal | number:'1.2-2' }}</span>
+          </div>
+          
+          <!-- Costos aplicados en orden de prioridad -->
+          <div *ngFor="let costType of getCostTypesInPriorityOrder()" class="breakdown-item">
+            <span class="label">{{ costType.name }} ({{ costType.percentage }}%) - P{{ costType.priority }}:</span>
+            <span class="value">Q{{ getCostTypeAmount(costType.id) | number:'1.2-2' }}</span>
+            <span class="subtotal-after">Subtotal: Q{{ getSubtotalAfterCost(costType.id) | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="breakdown-item final-price">
+            <span class="label">Precio Final:</span>
+            <span class="value">Q{{ priceBreakdown.finalPrice | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</app-modal>

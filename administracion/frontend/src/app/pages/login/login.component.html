@@ -1,0 +1,83 @@
+<div class="login-page">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="logo">
+        <i class="fas fa-paw"></i>
+        <h1>CrunchyPaws</h1>
+      </div>
+      <p class="subtitle">Sistema de Administración</p>
+    </div>
+    
+    <div class="login-card">
+      <h2 class="login-title">Iniciar Sesión</h2>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <div class="input-group">
+            <i class="fas fa-envelope input-icon"></i>
+            <input 
+              type="email" 
+              id="email" 
+              formControlName="email" 
+              class="form-control"
+              placeholder="Ingresa tu email"
+              [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          </div>
+          <div class="error-message" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es requerido</span>
+            <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingresa un email válido</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña:</label>
+          <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input 
+              type="password" 
+              id="password" 
+              formControlName="password" 
+              class="form-control"
+              placeholder="Ingresa tu contraseña"
+              [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          </div>
+          <div class="error-message" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
+            <span *ngIf="loginForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="rememberMe" class="checkbox">
+            <span class="checkmark"></span>
+            Recordarme
+          </label>
+        </div>
+
+        <button type="submit" class="login-btn" [disabled]="loginForm.invalid">
+          <i class="fas fa-sign-in-alt"></i>
+          Iniciar Sesión
+        </button>
+      </form>
+      
+      <div class="login-footer">
+        <p class="forgot-password">¿Olvidaste tu contraseña? <a href="#">Recuperar</a></p>
+        <div class="demo-credentials" *ngIf="showDemoCredentials">
+          <h4>Credenciales de Demo:</h4>
+          <p><strong>Email:</strong> admin&#64;crunchypaws.com</p>
+          <p><strong>Contraseña:</strong> password</p>
+        </div>
+        
+        <div class="debug-actions">
+          <button type="button" class="btn btn-warning" (click)="clearStorage()">
+            <i class="fas fa-trash"></i>
+            Limpiar Storage (Debug)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

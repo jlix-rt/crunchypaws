@@ -1,23 +1,28 @@
 import { Router } from 'express';
-import { AuthController } from '@/controllers/AuthController';
-import { validateBody } from '@/middleware/validation';
-import { authenticateToken } from '@/middleware/auth';
-import { authLimiter } from '@/middleware/rateLimit';
-import { registerSchema, loginSchema, updateProfileSchema } from '@/utils/validation';
+import { AuthController } from '../controllers/AuthController';
+import { validateRequest } from '../middleware/validation';
+import { loginSchema, registerSchema, refreshTokenSchema } from '../validators/authSchemas';
 
 const router = Router();
 const authController = new AuthController();
 
-// Aplicar rate limiting a todas las rutas de auth
-router.use(authLimiter);
+// POST /api/auth/login
+router.post('/login', validateRequest(loginSchema), authController.login);
 
-// Rutas públicas
-router.post('/register', validateBody(registerSchema), authController.register);
-router.post('/login', validateBody(loginSchema), authController.login);
+// POST /api/auth/register
+router.post('/register', validateRequest(registerSchema), authController.register);
 
-// Rutas protegidas
-router.get('/me', authenticateToken, authController.getProfile);
-router.put('/me', authenticateToken, validateBody(updateProfileSchema), authController.updateProfile);
-router.put('/change-password', authenticateToken, authController.changePassword);
+// POST /api/auth/refresh
+router.post('/refresh', validateRequest(refreshTokenSchema), authController.refreshToken);
+
+// POST /api/auth/logout
+router.post('/logout', authController.logout);
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', authController.forgotPassword);
+
+// POST /api/auth/reset-password
+router.post('/reset-password', authController.resetPassword);
 
 export default router;
+

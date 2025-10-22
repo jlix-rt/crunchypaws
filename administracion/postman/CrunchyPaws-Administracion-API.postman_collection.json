@@ -1,0 +1,368 @@
+{
+  "info": {
+    "name": "CrunchyPaws Administración API",
+    "description": "Colección de endpoints para el sistema de administración de CrunchyPaws",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3003",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@crunchypaws.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Supplies",
+      "item": [
+        {
+          "name": "Get Supplies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/supplies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "supplies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Supply",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carne de Pollo\",\n  \"unit\": \"kg\",\n  \"unit_cost\": 25.00,\n  \"is_also_product\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/supplies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "supplies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Supply",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carne de Pollo Premium\",\n  \"unit\": \"kg\",\n  \"unit_cost\": 28.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/supplies/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "supplies", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alimento Premium para Perros\",\n  \"sku\": \"AS001\",\n  \"description\": \"Alimento balanceado con proteína de pollo\",\n  \"category_id\": 1,\n  \"base_price\": 35.00,\n  \"stock\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Recipe",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipe_items\": [\n    {\n      \"supply_id\": 1,\n      \"quantity\": 0.5\n    },\n    {\n      \"supply_id\": 2,\n      \"quantity\": 0.3\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/products/1/recipe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "products", "1", "recipe"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Price Addons",
+      "item": [
+        {
+          "name": "Get Price Addons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/price-addons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "price-addons"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Price Addon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IVA\",\n  \"percent\": 12.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/price-addons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "price-addons"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"María González\",\n  \"email\": \"maria.gonzalez@crunchypaws.com\",\n  \"password\": \"employee123\",\n  \"phone\": \"50287654321\",\n  \"role\": \"EMPLOYEE\",\n  \"commission_percent\": 5.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/2/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "2", "role"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Get Pending Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reviews/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reviews", "pending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_approved\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reviews/1/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reviews", "1", "approve"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Sales Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/sales?start_date=2024-01-01&end_date=2024-01-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "sales"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-01-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Top Products Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/top-products?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "top-products"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
+
+

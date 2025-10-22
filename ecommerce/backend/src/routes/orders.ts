@@ -1,24 +1,29 @@
 import { Router } from 'express';
-import { OrderController } from '@/controllers/OrderController';
-import { validateBody } from '@/middleware/validation';
-import { authenticateToken, optionalAuth } from '@/middleware/auth';
-import { orderLimiter } from '@/middleware/rateLimit';
-import { orderSchema } from '@/utils/validation';
+import { OrderController } from '../controllers/OrderController';
+import { authenticateToken, requireClient } from '../middleware/auth';
+import { validateRequest } from '../middleware/validation';
+import { createOrderSchema } from '../validators/orderSchemas';
 
 const router = Router();
 const orderController = new OrderController();
 
-// Crear orden (con o sin autenticación)
-router.post('/', orderLimiter, optionalAuth, validateBody(orderSchema), orderController.createOrder);
+// GET /api/orders
+router.get('/', authenticateToken, requireClient, orderController.getOrders);
 
-// Obtener orden específica (pública para permitir seguimiento)
-router.get('/:id', orderController.getOrder);
+// GET /api/orders/:id
+router.get('/:id', authenticateToken, requireClient, orderController.getOrderById);
 
-// Rutas protegidas
-router.get('/', authenticateToken, orderController.getUserOrders);
-router.get('/stats', authenticateToken, orderController.getOrderStats);
+// POST /api/orders
+router.post('/', authenticateToken, requireClient, validateRequest(createOrderSchema), orderController.createOrder);
 
-// Rutas administrativas (requieren autenticación adicional en producción)
-router.put('/:id/status', orderController.updateOrderStatus);
+// PUT /api/orders/:id/cancel
+router.put('/:id/cancel', authenticateToken, requireClient, orderController.cancelOrder);
+
+// GET /api/orders/:id/tracking
+router.get('/:id/tracking', authenticateToken, requireClient, orderController.getOrderTracking);
+
+// POST /api/orders/:id/review
+router.post('/:id/review', authenticateToken, requireClient, orderController.createReview);
 
 export default router;
+

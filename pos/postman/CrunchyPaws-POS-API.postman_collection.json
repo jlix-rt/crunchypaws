@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "CrunchyPaws POS API",
+    "description": "Colección de endpoints para el sistema POS de CrunchyPaws",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Employee Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria.gonzalez@crunchypaws.com\",\n  \"password\": \"employee123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "POS Sessions",
+      "item": [
+        {
+          "name": "Open Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"opening_amount\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/sessions/open",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "sessions", "open"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Close Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"closing_amount\": 150.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/sessions/close",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "sessions", "close"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Session",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/sessions/current",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "sessions", "current"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Search Product by SKU",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/products/search?sku=AS001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "products", "search"],
+              "query": [
+                {
+                  "key": "sku",
+                  "value": "AS001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by Barcode",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/products/barcode/1234567890123",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "products", "barcode", "1234567890123"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Price Lists",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/price-lists",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "price-lists"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create POS Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2,\n      \"unit_price\": 50.00\n    }\n  ],\n  \"customer_phone\": \"50212345678\",\n  \"customer_email\": \"cliente@email.com\",\n  \"payment_method_id\": 1,\n  \"notes\": \"Venta en tienda\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get POS Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/orders?date=2024-01-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "orders"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-01-15"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Daily Sales Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/reports/daily?date=2024-01-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "reports", "daily"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-01-15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Employee Sales Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pos/reports/employee?employee_id=2&start_date=2024-01-01&end_date=2024-01-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pos", "reports", "employee"],
+              "query": [
+                {
+                  "key": "employee_id",
+                  "value": "2"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-01-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
+
+

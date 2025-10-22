@@ -1,0 +1,87 @@
+{
+  "name": "crunchypaws-pos-frontend",
+  "version": "1.0.0",
+  "description": "Frontend POS para CrunchyPaws con Angular 20",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:prod": "ng build --configuration=production",
+    "test": "ng test",
+    "test:watch": "ng test --watch",
+    "test:coverage": "ng test --code-coverage",
+    "e2e": "ng e2e",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "format": "prettier --write \"src/**/*.{ts,html,scss}\""
+  },
+  "keywords": [
+    "angular",
+    "pos",
+    "point-of-sale",
+    "crunchypaws",
+    "guatemala"
+  ],
+  "author": "CrunchyPaws Team",
+  "license": "MIT",
+  "dependencies": {
+    "@angular/animations": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/compiler": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0",
+    "@angular/platform-browser-dynamic": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "@angular/service-worker": "^20.0.0",
+    "@ngrx/effects": "^18.0.0",
+    "@ngrx/store": "^18.0.0",
+    "@ngrx/store-devtools": "^18.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.0",
+    "bootstrap": "^5.3.0",
+    "tailwindcss": "^3.4.0",
+    "ngx-toastr": "^18.0.0",
+    "ngx-spinner": "^16.0.0",
+    "ngx-pagination": "^6.0.0",
+    "ngx-skeleton-loader": "^8.0.0",
+    "socket.io-client": "^4.7.0",
+    "ngx-cookie-service": "^17.0.0",
+    "ngx-device-detector": "^8.0.0",
+    "chart.js": "^4.4.0",
+    "ng2-charts": "^5.0.0",
+    "ngx-print": "^1.2.0",
+    "ngx-barcode": "^1.0.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.0.0",
+    "@angular/cli": "^20.0.0",
+    "@angular/compiler-cli": "^20.0.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^18.7.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.4.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "sass": "^1.69.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
+
+

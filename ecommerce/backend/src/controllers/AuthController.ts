@@ -1,158 +1,182 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import { UserRepository } from '@/repositories/UserRepository';
-import { JwtHelper } from '@/utils/jwt';
-import { ResponseHelper } from '@/utils/response';
-import { AuthenticatedRequest } from '@/types';
-import { RegisterData, LoginData, UpdateProfileData } from '@/utils/validation';
-
-const userRepository = new UserRepository();
+import jwt from 'jsonwebtoken';
+import { AppDataSource } from '../config/database';
+import { User, UserRole } from '../entities/User';
+import { CustomError, asyncHandler } from '../middleware/errorHandler';
+import { config } from '../config/config';
 
 export class AuthController {
-  async register(req: Request, res: Response): Promise<void> {
+  private userRepository = AppDataSource.getRepository(User);
+
+  login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+
+    // Buscar usuario
+    const user = await this.userRepository.findOne({
+      where: { email, is_active: true },
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      throw new CustomError('Credenciales inválidas', 401);
+    }
+
+    // Generar tokens
+    const accessToken = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      config.jwt.refreshSecret,
+      { expiresIn: config.jwt.refreshExpiresIn }
+    );
+
+    res.json({
+      message: 'Login exitoso',
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        role: user.role,
+      },
+      accessToken,
+      refreshToken,
+    });
+  });
+
+  register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { full_name, email, password, phone, nit } = req.body;
+
+    // Verificar si el usuario ya existe
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new CustomError('El email ya está registrado', 400);
+    }
+
+    // Hash de la contraseña
+    const password_hash = await bcrypt.hash(password, 12);
+
+    // Generar código de referido único
+    const referral_code = `CLI${Date.now()}`;
+
+    // Crear usuario
+    const user = this.userRepository.create({
+      full_name,
+      email,
+      password_hash,
+      phone,
+      nit,
+      role: UserRole.CLIENT,
+      referral_code,
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Generar tokens
+    const accessToken = jwt.sign(
+      { userId: savedUser.id, email: savedUser.email, role: savedUser.role },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: savedUser.id },
+      config.jwt.refreshSecret,
+      { expiresIn: config.jwt.refreshExpiresIn }
+    );
+
+    res.status(201).json({
+      message: 'Usuario registrado exitosamente',
+      user: {
+        id: savedUser.id,
+        full_name: savedUser.full_name,
+        email: savedUser.email,
+        role: savedUser.role,
+        referral_code: savedUser.referral_code,
+      },
+      accessToken,
+      refreshToken,
+    });
+  });
+
+  refreshToken = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      throw new CustomError('Refresh token requerido', 401);
+    }
+
     try {
-      const data: RegisterData = req.body;
-
-      // Verificar si el email ya existe
-      const existingUser = await userRepository.findByEmail(data.email);
-      if (existingUser) {
-        ResponseHelper.error(res, 'El email ya está registrado', 409);
-        return;
-      }
-
-      // Hash de la contraseña
-      const passwordHash = await bcrypt.hash(data.password, 10);
-
-      // Crear usuario
-      const user = await userRepository.create({
-        ...data,
-        passwordHash,
+      const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as any;
+      
+      const user = await this.userRepository.findOne({
+        where: { id: decoded.userId, is_active: true },
       });
 
-      // Generar token
-      const token = JwtHelper.generateToken(user);
-
-      // Respuesta sin la contraseña
-      const { passwordHash: _, ...userResponse } = user;
-
-      ResponseHelper.success(res, {
-        user: userResponse,
-        token,
-      }, 'Usuario registrado exitosamente', 201);
-    } catch (error) {
-      console.error('Error en registro:', error);
-      ResponseHelper.serverError(res);
-    }
-  }
-
-  async login(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password }: LoginData = req.body;
-
-      // Buscar usuario
-      const user = await userRepository.findByEmail(email);
       if (!user) {
-        ResponseHelper.error(res, 'Credenciales inválidas', 401);
-        return;
+        throw new CustomError('Usuario no encontrado', 401);
       }
 
-      // Verificar contraseña
-      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-      if (!isValidPassword) {
-        ResponseHelper.error(res, 'Credenciales inválidas', 401);
-        return;
-      }
+      // Generar nuevo access token
+      const accessToken = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role },
+        config.jwt.secret,
+        { expiresIn: config.jwt.expiresIn }
+      );
 
-      // Generar token
-      const token = JwtHelper.generateToken(user);
-
-      // Respuesta sin la contraseña
-      const { passwordHash: _, ...userResponse } = user;
-
-      ResponseHelper.success(res, {
-        user: userResponse,
-        token,
-      }, 'Inicio de sesión exitoso');
+      res.json({
+        message: 'Token renovado exitosamente',
+        accessToken,
+      });
     } catch (error) {
-      console.error('Error en login:', error);
-      ResponseHelper.serverError(res);
+      throw new CustomError('Refresh token inválido', 401);
     }
-  }
+  });
 
-  async getProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        ResponseHelper.unauthorized(res);
-        return;
-      }
+  logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    // En una implementación real, aquí se invalidaría el refresh token
+    res.json({
+      message: 'Logout exitoso',
+    });
+  });
 
-      const { passwordHash: _, ...userResponse } = req.user;
-      ResponseHelper.success(res, userResponse);
-    } catch (error) {
-      console.error('Error obteniendo perfil:', error);
-      ResponseHelper.serverError(res);
+  forgotPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+
+    const user = await this.userRepository.findOne({
+      where: { email, is_active: true },
+    });
+
+    if (!user) {
+      // Por seguridad, no revelamos si el email existe o no
+      res.json({
+        message: 'Si el email existe, se enviará un enlace de recuperación',
+      });
+      return;
     }
-  }
 
-  async updateProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        ResponseHelper.unauthorized(res);
-        return;
-      }
+    // Aquí se implementaría el envío de email con token de recuperación
+    // Por ahora, solo retornamos un mensaje
+    res.json({
+      message: 'Si el email existe, se enviará un enlace de recuperación',
+    });
+  });
 
-      const data: UpdateProfileData = req.body;
+  resetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { token, newPassword } = req.body;
 
-      // Si se está actualizando el email, verificar que no exista
-      if (data.email && data.email !== req.user.email) {
-        const existingUser = await userRepository.findByEmail(data.email);
-        if (existingUser) {
-          ResponseHelper.error(res, 'El email ya está en uso', 409);
-          return;
-        }
-      }
-
-      const updatedUser = await userRepository.update(req.user.id, data);
-      const { passwordHash: _, ...userResponse } = updatedUser;
-
-      ResponseHelper.success(res, userResponse, 'Perfil actualizado exitosamente');
-    } catch (error) {
-      console.error('Error actualizando perfil:', error);
-      ResponseHelper.serverError(res);
-    }
-  }
-
-  async changePassword(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        ResponseHelper.unauthorized(res);
-        return;
-      }
-
-      const { currentPassword, newPassword } = req.body;
-
-      if (!currentPassword || !newPassword) {
-        ResponseHelper.error(res, 'Contraseña actual y nueva son requeridas');
-        return;
-      }
-
-      // Verificar contraseña actual
-      const isValidPassword = await bcrypt.compare(currentPassword, req.user.passwordHash);
-      if (!isValidPassword) {
-        ResponseHelper.error(res, 'Contraseña actual incorrecta', 401);
-        return;
-      }
-
-      // Hash de la nueva contraseña
-      const passwordHash = await bcrypt.hash(newPassword, 10);
-
-      // Actualizar contraseña
-      await userRepository.update(req.user.id, { passwordHash } as any);
-
-      ResponseHelper.success(res, null, 'Contraseña actualizada exitosamente');
-    } catch (error) {
-      console.error('Error cambiando contraseña:', error);
-      ResponseHelper.serverError(res);
-    }
-  }
+    // Aquí se validaría el token y se actualizaría la contraseña
+    // Por ahora, solo retornamos un mensaje
+    res.json({
+      message: 'Contraseña restablecida exitosamente',
+    });
+  });
 }
+
+

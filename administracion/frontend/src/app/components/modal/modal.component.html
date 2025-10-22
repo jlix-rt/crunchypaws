@@ -1,0 +1,23 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onOverlayClick($event)">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ title }}</h3>
+      <button class="modal-close" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <ng-content></ng-content>
+    </div>
+    
+    <div class="modal-footer" *ngIf="showFooter">
+      <button class="btn btn-secondary" (click)="closeModal()">
+        {{ cancelText }}
+      </button>
+      <button class="btn btn-primary" (click)="confirmModal()" [disabled]="disableConfirm">
+        {{ confirmText }}
+      </button>
+    </div>
+  </div>
+</div>
